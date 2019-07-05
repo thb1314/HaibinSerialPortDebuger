@@ -1,0 +1,24 @@
+<RCC>
+    <qresource prefix="/">
+        <file>ui/css/lightblue.css</file>
+        <file>ui/css/lightblue/add_bottom.png</file>
+        <file>ui/css/lightblue/add_left.png</file>
+        <file>ui/css/lightblue/add_right.png</file>
+        <file>ui/css/lightblue/add_top.png</file>
+        <file>ui/css/lightblue/branch_close.png</file>
+        <file>ui/css/lightblue/branch_open.png</file>
+        <file>ui/css/lightblue/calendar_nextmonth.png</file>
+        <file>ui/css/lightblue/calendar_prevmonth.png</file>
+        <file>ui/css/lightblue/checkbox_checked.png</file>
+        <file>ui/css/lightblue/checkbox_checked_disable.png</file>
+        <file>ui/css/lightblue/checkbox_parcial.png</file>
+        <file>ui/css/lightblue/checkbox_parcial_disable.png</file>
+        <file>ui/css/lightblue/checkbox_unchecked.png</file>
+        <file>ui/css/lightblue/checkbox_unchecked_disable.png</file>
+        <file>ui/css/lightblue/radiobutton_checked.png</file>
+        <file>ui/css/lightblue/radiobutton_checked_disable.png</file>
+        <file>ui/css/lightblue/radiobutton_unchecked.png</file>
+        <file>ui/css/lightblue/radiobutton_unchecked_disable.png</file>
+        <file>ui/css/fontawesome-webfont.ttf</file>
+    </qresource>
+</RCC>
