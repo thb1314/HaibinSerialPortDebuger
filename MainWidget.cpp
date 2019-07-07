@@ -23,7 +23,7 @@ void MainWidget::removeFrame()
              Qt::WindowSystemMenuHint |
              Qt::WindowMinMaxButtonsHint);
     this->setWindowFlags(flag);
-    qDebug() << flag;
+//    qDebug() << flag;
 }
 
 MainWidget::MainWidget(QWidget* parent) : QDialog(parent)
@@ -56,6 +56,8 @@ MainWidget::MainWidget(QWidget* parent) : QDialog(parent)
     }
 
 }
+
+
 void MainWidget::initWidget(void)
 {
     QVBoxLayout* vLayoutParent = new QVBoxLayout(this);
