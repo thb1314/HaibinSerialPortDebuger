@@ -4,6 +4,10 @@
 #include <QMap>
 #include <QEvent>
 #include <QMouseEvent>
+#include <QTextCodec>
+#include <QMessageBox>
+#include <QTimer>
+
 
 #include "MainWindow.h"
 #include "ui_mainwindow.h"
@@ -79,6 +83,7 @@ MainWindow::MainWindow(QWidget* parent) :
             {
                 // Todo: 自定义MessageBox提示打开错误
                 qDebug() << "设置停止位失败，失败原因：" << serial_port->errorString();
+                QMessageBox::warning(this, "错误", QString("设置停止位失败，失败原因：") + serial_port->errorString());
                 return;
             }
             // 获取校验位
@@ -112,12 +117,49 @@ MainWindow::MainWindow(QWidget* parent) :
             else
             {
                 // Todo: 自定义MessageBox提示打开错误
-                qDebug() << "自定义MessageBox提示打开错误";
+//                qDebug() << "自定义MessageBox提示打开错误";
+                QMessageBox::warning(this, "错误", serial_port->errorString());
                 qDebug() << serial_port->errorString();
             }
         }
     });
+    this->send_timer = new QTimer(this);
+    QObject::connect(this->send_timer, SIGNAL(timeout()), this, SLOT(slotOnSendSerialContent()));
+    QObject::connect(ui->pB_senddata, SIGNAL(clicked()), this, SLOT(slotOnSendSerialContent()));
+    QObject::connect(ui->pB_autoSend, &QPushButton::clicked, [this]
+    {
 
+        if(this->ui->pB_autoSend->text() == "自动发送")
+        {
+            bool is_ok = false;
+            int send_inter_ms = this->ui->lE_send_ms->text()
+            .toInt(&is_ok);
+            is_ok &= !this->ui->tE_sendcon->toPlainText().isEmpty();
+            is_ok &= this->is_open_serailport;
+            if(is_ok)
+            {
+
+//                this->send_timer->setInterval(send_inter_ms);
+                this->send_timer->start(send_inter_ms);
+                this->ui->pB_autoSend->setText("停止发送");
+                this->ui->pB_senddata->setDisabled(true);
+                this->ui->pB_sendfile->setDisabled(true);
+            }
+            else
+            {
+
+                qDebug() << "报错";
+            }
+
+        }
+        else
+        {
+            this->ui->pB_senddata->setDisabled(false);
+            this->ui->pB_sendfile->setDisabled(false);
+            this->ui->pB_autoSend->setText("自动发送");
+            this->send_timer->stop();
+        }
+    });
 }
 
 MainWindow::~MainWindow()
@@ -276,5 +318,116 @@ bool MainWindow::eventFilter(QObject* watched, QEvent* event)
 
 
     return QMainWindow::eventFilter(watched, event);
+}
+
+void MainWindow::slotOnSendSerialContent()
+{
+
+    if(this->is_open_serailport)
+    {
+        QString contentString = this->ui->tE_sendcon->toPlainText();
+        if(!contentString.isEmpty())
+        {
+            if(this->ui->rB_sendMode_text->isChecked())
+            {
+                QTextCodec* gbk = QTextCodec::codecForName("gbk");
+                this->serial_port->write(gbk->fromUnicode(contentString.toLocal8Bit().data()));
+            }
+            else if(this->ui->rB_sendMode_hex->isChecked())
+            {
+                QByteArray send_arr;
+                int content_length = contentString.length();
+                char hexchar, hexchar_next;
+                for(int i = 0; i < content_length; i++)
+                {
+                    hexchar = contentString[i].toLower().toLatin1();
+                    qDebug("Test:%#x", hexchar);
+                    switch(hexchar)
+                    {
+                        case '\r':
+                        case '\n':
+                        case ' ':
+                            break;
+                        default:
+                            if(hexchar >= '0' && hexchar <= '9')
+                            {
+                                if(i + 1 < content_length)
+                                {
+                                    hexchar_next = contentString[i + 1].toLower().toLatin1();
+                                    if(hexchar_next >= '0' && hexchar_next <= '9')
+                                    {
+                                        send_arr.append((char)(((hexchar - 0x30) << 4) | (hexchar_next - 0x30)));
+                                        i++;
+                                    }
+                                    else if(hexchar_next >= 'a' && hexchar_next <= 'f')
+                                    {
+                                        send_arr.append((char)(((hexchar - 0x30) << 4) | (hexchar_next - 'a' + 10)));
+                                        i++;
+                                    }
+                                    else if(hexchar_next == '\n' || hexchar_next == '\r' || hexchar_next == ' ')
+                                    {
+                                        send_arr.append((char)(hexchar - 0x30));
+                                        i++;
+                                    }
+                                    else
+                                    {
+                                        send_arr.append((char)(hexchar - 0x30));
+                                        i = content_length;
+                                    }
+                                }
+                                else
+                                {
+                                    send_arr.append((char)(hexchar - 0x30));
+                                }
+                            }
+                            else if(hexchar >= 'a' && hexchar <= 'f')
+                            {
+                                if(i + 1 < content_length)
+                                {
+                                    hexchar_next = contentString[i + 1].toLower().toLatin1();
+                                    if(hexchar_next >= '0' && hexchar_next <= '9')
+                                    {
+                                        send_arr.append((char)(((hexchar - 'a' + 10) << 4) | (hexchar_next - 0x30)));
+                                        i++;
+                                    }
+                                    else if(hexchar_next >= 'a' && hexchar_next <= 'f')
+                                    {
+                                        send_arr.append((char)(((hexchar - 'a' + 10) << 4) | (hexchar_next - 'a' + 10)));
+                                        i++;
+                                    }
+                                    else if(hexchar_next == '\n' || hexchar_next == '\r' || hexchar_next == ' ')
+                                    {
+                                        send_arr.append((char)(hexchar - 'a' + 10));
+                                        i++;
+                                    }
+                                    else
+                                    {
+                                        send_arr.append((char)(hexchar - 'a' + 10));
+                                        i = content_length;
+                                    }
+                                }
+                                else
+                                {
+                                    send_arr.append((char)(hexchar - 'a' + 10));
+                                }
+                            }
+                            else
+                            {
+                                i = content_length;
+                            }
+                            break;
+                    }
+                }
+                //end for
+                if(send_arr.length() > 0)
+                    this->serial_port->write(send_arr);
+            }
+            //end else if(this->ui->rB_sendMode_hex->isChecked())
+        }
+        //end !contentString.isEmpty()
+    }
+    // end this->is_open_serial
+
+
 }
 

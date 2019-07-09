@@ -7,6 +7,7 @@ namespace Ui
 class MainWindow;
 }
 class QSerialPort;
+class QTimer;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -23,11 +24,13 @@ protected:
     QSerialPort* serial_port;
     int last_combox_index;
     bool eventFilter(QObject* watched, QEvent* event);
+    QTimer* send_timer;
 private:
     Ui::MainWindow* ui;
 signals:
 
 public slots:
+    void slotOnSendSerialContent(void);
 };
 
 #endif // MAINWINDOW_H
