@@ -20,5 +20,12 @@
         <file>ui/css/lightblue/radiobutton_unchecked.png</file>
         <file>ui/css/lightblue/radiobutton_unchecked_disable.png</file>
         <file>ui/css/fontawesome-webfont.ttf</file>
+        <file>ui/image/btn_close.png</file>
+        <file>ui/image/btn_ok.png</file>
+        <file>ui/image/fontawesome-webfont.ttf</file>
+        <file>ui/image/msg_error.png</file>
+        <file>ui/image/msg_info.png</file>
+        <file>ui/image/msg_question.png</file>
+        <file>ui/image/qt_zh_CN.qm</file>
     </qresource>
 </RCC>

@@ -332,8 +332,6 @@ bool MainWidget::setMainWindow(QMainWindow* mainWindow)
 {
     if(NULL == this->mainWindow)
     {
-
-
         //将子窗体添加到布局
         this->widgetMain->layout()->addWidget(mainWindow);
         //自动设置大小

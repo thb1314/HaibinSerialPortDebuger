@@ -2,7 +2,7 @@
 #include <QTextCodec>
 #include <QFile>
 #include <QDebug>
-
+#include "MessageBox.h"
 #include "MainWidget.h"
 #include "config.h"
 #include "MainWindow.h"

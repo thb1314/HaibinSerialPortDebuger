@@ -2,13 +2,15 @@ HEADERS += \
     MainWidget.h \
     Settings.h \
     config.h \
-    MainWindow.h
+    MainWindow.h \
+    MessageBox.h
 
 SOURCES += \
     MainWidget.cpp \
     main.cpp \
     Settings.cpp \
-    MainWindow.cpp
+    MainWindow.cpp \
+    MessageBox.cpp
 
 CONFIG += C++11
 QT       += core gui

@@ -8,7 +8,7 @@
 #include <QMessageBox>
 #include <QTimer>
 
-
+#include "MessageBox.h"
 #include "MainWindow.h"
 #include "ui_mainwindow.h"
 
@@ -63,8 +63,9 @@ MainWindow::MainWindow(QWidget* parent) :
             ret &= serial_port->setBaudRate(this->ui->cB_bautrate->currentData().toInt());
             if(!ret)
             {
-                // Todo: 自定义MessageBox提示打开错误
+
                 qDebug() << "设置波特率失败，失败原因：" << serial_port->errorString();
+                MessageBox::warning(this, "设置波特率失败", QString("原因:") + serial_port->errorString());
                 return;
             }
             // 获取数据位
@@ -72,8 +73,9 @@ MainWindow::MainWindow(QWidget* parent) :
             ret &= serial_port->setDataBits(databits);
             if(!ret)
             {
-                // Todo: 自定义MessageBox提示打开错误
+
                 qDebug() << "设置数据位失败，失败原因：" << serial_port->errorString();
+                MessageBox::warning(this, "设置数据位失败", QString("原因:") + serial_port->errorString());
                 return;
             }
             // 获取停止位
@@ -81,7 +83,7 @@ MainWindow::MainWindow(QWidget* parent) :
             ret &= serial_port->setStopBits(stopbits);
             if(!ret)
             {
-                // Todo: 自定义MessageBox提示打开错误
+
                 qDebug() << "设置停止位失败，失败原因：" << serial_port->errorString();
                 QMessageBox::warning(this, "错误", QString("设置停止位失败，失败原因：") + serial_port->errorString());
                 return;
@@ -91,16 +93,18 @@ MainWindow::MainWindow(QWidget* parent) :
             ret &= serial_port->setParity(checkbits);
             if(!ret)
             {
-                // Todo: 自定义MessageBox提示打开错误
+
                 qDebug() << "设置校验位失败，失败原因：" << serial_port->errorString();
+                MessageBox::warning(this, "设置校验位失败", QString("原因:") + serial_port->errorString());
                 return;
             }
             // 设置流控
             ret &= serial_port->setFlowControl(QSerialPort::NoFlowControl);
             if(!ret)
             {
-                // Todo: 自定义MessageBox提示打开错误
+
                 qDebug() << "设置流控失败，失败原因：" << serial_port->errorString();
+                MessageBox::warning(this, "设置流控失败", QString("原因:") + serial_port->errorString());
                 return;
             }
             // 设置读写
@@ -116,10 +120,8 @@ MainWindow::MainWindow(QWidget* parent) :
             }
             else
             {
-                // Todo: 自定义MessageBox提示打开错误
-//                qDebug() << "自定义MessageBox提示打开错误";
-                QMessageBox::warning(this, "错误", serial_port->errorString());
-                qDebug() << serial_port->errorString();
+                qDebug() << "自定义MessageBox提示打开错误" << serial_port->errorString();
+                MessageBox::warning(this, "打开串口失败", QString("原因:") + serial_port->errorString());
             }
         }
     });
@@ -147,8 +149,8 @@ MainWindow::MainWindow(QWidget* parent) :
             }
             else
             {
-
                 qDebug() << "报错";
+                MessageBox::warning(this, "错误", "请查看串口是否打开以及时间间隔和内容是否设置！");
             }
 
         }
@@ -202,6 +204,7 @@ void MainWindow::initBautrateList()
             {
                 qDebug() << "切换失败";
                 this->ui->cB_bautrate->setCurrentIndex(this->last_combox_index);
+                MessageBox::warning(this, "错误", "切换失败，可能当前硬件不支持这种波特率！");
             }
         }
     });
@@ -231,8 +234,9 @@ void MainWindow::initDataBitList()
             bool ret = this->serial_port->setDataBits(databits);
             if(!ret)
             {
-                this->ui->cB_databits->setCurrentIndex(this->last_combox_index);
                 qDebug() << "切换失败";
+                this->ui->cB_databits->setCurrentIndex(this->last_combox_index);
+                MessageBox::warning(this, "错误", "切换失败，可能当前硬件不支持这种数据位！");
 //                return false;
             }
         }
@@ -259,8 +263,9 @@ void MainWindow::initStopBitList()
             bool ret = this->serial_port->setStopBits(stopbits);
             if(!ret)
             {
-                this->ui->cB_stopbit->setCurrentIndex(this->last_combox_index);
                 qDebug() << "切换失败";
+                MessageBox::warning(this, "错误", "切换失败，可能当前硬件不支持这种停止位！");
+                this->ui->cB_stopbit->setCurrentIndex(this->last_combox_index);
 //                this->ui->cB_stopbit->
 //                return false;
             }
@@ -291,6 +296,7 @@ void MainWindow::initCheckBitList()
             if(!ret)
             {
                 qDebug() << "切换失败";
+                MessageBox::warning(this, "错误", "切换失败，可能当前硬件不支持这种校验位！");
                 this->ui->cB_checkbit->setCurrentIndex(this->last_combox_index);
 //                return false;
             }

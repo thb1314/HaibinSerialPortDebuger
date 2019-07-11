@@ -1,4 +1,40 @@
 QPalette{background:#EAF7FF;}*{outline:0px;color:#386487;}
+QWidget[form="true"],QLabel[frameShape="1"]{
+border:1px solid #C0DCF2;
+border-radius:0px;
+}
+
+.QFrame,QWidget#MessageBox{
+border:1px solid #C0DCF2;
+border-radius:3px;
+}
+/*QLabel#labIcoMsg{
+image:url(:/ui/image/msg_info.png);
+}*/
+QWidget#msgWidgetTitle{
+background:qlineargradient(spread:pad,x1:0,y1:0,x2:0,y2:1,stop:0 #DEF0FE,stop:1 #C0DEF6);
+}
+
+
+/*QWidget#widget_bottom{
+background:#DEF0FE;
+}
+
+QWidget#widget_bottom>QFrame{
+border:1px solid #386487;
+}*/
+
+QWidget#msgWidgetTitle>QLabel{
+border-radius:0px;
+color:#386487;
+background:none;
+border-style:none;
+}
+
+
+
+
+
 
 QWidget[form="true"],QLabel[frameShape="1"]{
 border:1px solid #C0DCF2;
