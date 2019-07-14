@@ -7,6 +7,9 @@
 #include <QTextCodec>
 #include <QMessageBox>
 #include <QTimer>
+#include <QDateTime>
+#include <QScrollBar>
+
 
 #include "MessageBox.h"
 #include "MainWindow.h"
@@ -17,6 +20,7 @@ MainWindow::MainWindow(QWidget* parent) :
     serial_port(new QSerialPort(this)), ui(new Ui::MainWindow)
 {
     this->last_combox_index = 0;
+    this->rcv_data_map = new QMap<quint64, QByteArray>();
     ui->setupUi(this);
     ui->menuHelp->setMouseTracking(true);
 
@@ -27,6 +31,52 @@ MainWindow::MainWindow(QWidget* parent) :
     initCheckBitList();
 
 
+    QObject::connect(this->ui->pB_clearRcv, &QPushButton::clicked, [this]
+    {
+        this->rcv_data_map->clear();
+    });
+    QObject::connect(this->ui->actionAbout, &QAction::triggered, [this]
+    {
+        //QMessageBox替换成自己的
+        QMessageBox::about(this, "关于", "本软件由海滨开发且开放源代码，遵循LGPL协议。");
+    });
+    QObject::connect(this->ui->actionAbout_QT, &QAction::triggered, &qApp->aboutQt);
+
+    QObject::connect(this->ui->rB_rcvMode_text, &QRadioButton::toggled, [this](bool is_checked)
+    {
+        if(this->rcv_data_map->size() > 0)
+        {
+            this->ui->tE_rcvcon->clear();
+            foreach(qint64 unix_timestamp, this->rcv_data_map->keys())
+            {
+                QString rcvStr("[收] ");
+                rcvStr += QDateTime::fromMSecsSinceEpoch(unix_timestamp).toString("yyyy-MM-dd hh:mm:ss zzz");
+                rcvStr += "\r\n";
+                const QByteArray& rcv_data = this->rcv_data_map->value(unix_timestamp);
+                if(is_checked)
+                {
+                    rcvStr += this->GetCorrectUnicode(rcv_data);
+                }
+                else
+                {
+                    foreach(quint8 data, rcv_data)
+                    {
+                        if(data < 16)
+                        {
+                            rcvStr += "0" + QString::number(data, 16) + " ";
+                        }
+                        else
+                        {
+                            rcvStr += QString::number(data, 16) + " ";
+                        }
+                    }
+                }
+
+                rcvStr += "\r\n";
+                this->ui->tE_rcvcon->append(rcvStr);
+            }
+        }
+    });
     QObject::connect(ui->pB_openSerail, &QPushButton::clicked, [this]
     {
         if(this->is_open_serailport)
@@ -43,6 +93,7 @@ MainWindow::MainWindow(QWidget* parent) :
             {
                 this->ui->cB_serailport->setEnabled(true);
             }
+            QObject::disconnect(this->serial_port, SIGNAL(readyRead()));
             this->is_open_serailport = false;
         }
         else
@@ -117,6 +168,40 @@ MainWindow::MainWindow(QWidget* parent) :
                     this->ui->cB_serailport->setEnabled(false);
                 }
                 this->is_open_serailport = true;
+
+                QObject::connect(this->serial_port, &QSerialPort::readyRead, [this]
+                {
+                    quint64 unix_timestamp = QDateTime::currentMSecsSinceEpoch();   //获取当前时间
+                    this->rcv_data_map->insert(unix_timestamp, this->serial_port->readAll());
+                    QString rcvStr("[收] ");
+                    rcvStr += QDateTime::fromMSecsSinceEpoch(unix_timestamp).toString("yyyy-MM-dd hh:mm:ss zzz");
+                    rcvStr += "\r\n";
+                    const QByteArray& rcv_data = this->rcv_data_map->value(unix_timestamp);
+                    if(this->ui->rB_rcvMode_text->isChecked())
+                    {
+                        rcvStr += this->GetCorrectUnicode(rcv_data);
+                    }
+                    else if(this->ui->rB_rcvMode_hex->isChecked())
+                    {
+//                        int len = rcv_data.length();
+                        foreach(quint8 data, rcv_data)
+                        {
+                            if(data < 16)
+                            {
+                                rcvStr += "0" + QString::number(data, 16) + " ";
+                            }
+                            else
+                            {
+                                rcvStr += QString::number(data, 16) + " ";
+                            }
+                        }
+                    }
+
+                    rcvStr += "\r\n";
+                    this->ui->tE_rcvcon->append(rcvStr);
+                    QScrollBar* scrollBar = this->ui->tE_rcvcon->verticalScrollBar();
+                    scrollBar->setValue(scrollBar->maximum());
+                });
             }
             else
             {
@@ -125,6 +210,9 @@ MainWindow::MainWindow(QWidget* parent) :
             }
         }
     });
+
+
+
     this->send_timer = new QTimer(this);
     QObject::connect(this->send_timer, SIGNAL(timeout()), this, SLOT(slotOnSendSerialContent()));
     QObject::connect(ui->pB_senddata, SIGNAL(clicked()), this, SLOT(slotOnSendSerialContent()));
@@ -172,6 +260,22 @@ MainWindow::~MainWindow()
     }
     delete serial_port;
     delete ui;
+    delete rcv_data_map;
+}
+QString MainWindow::GetCorrectUnicode(const QByteArray& ba)
+{
+    QTextCodec::ConverterState state;
+    QTextCodec* codec = QTextCodec::codecForName("UTF-8");
+    QString text = codec->toUnicode(ba.constData(), ba.size(), &state);
+    if(state.invalidChars > 0)
+    {
+        text = QTextCodec::codecForName("GBK")->toUnicode(ba);
+    }
+    else
+    {
+        text = ba;
+    }
+    return text;
 }
 
 void MainWindow::initSerialPortList()
@@ -347,7 +451,7 @@ void MainWindow::slotOnSendSerialContent()
                 for(int i = 0; i < content_length; i++)
                 {
                     hexchar = contentString[i].toLower().toLatin1();
-                    qDebug("Test:%#x", hexchar);
+//                    qDebug("Test:%#x", hexchar);
                     switch(hexchar)
                     {
                         case '\r':

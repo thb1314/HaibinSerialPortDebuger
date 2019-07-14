@@ -44,7 +44,7 @@
                   <number>3</number>
                  </property>
                  <item>
-                  <widget class="QRadioButton" name="radioButton_6">
+                  <widget class="QRadioButton" name="rB_rcvMode_text">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                      <horstretch>0</horstretch>
@@ -66,10 +66,13 @@
                    <property name="checked">
                     <bool>true</bool>
                    </property>
+                   <attribute name="buttonGroup">
+                    <string notr="true">buttonGroup_rcv</string>
+                   </attribute>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QRadioButton" name="radioButton_5">
+                  <widget class="QRadioButton" name="rB_rcvMode_hex">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                      <horstretch>0</horstretch>
@@ -91,10 +94,13 @@
                    <property name="checked">
                     <bool>false</bool>
                    </property>
+                   <attribute name="buttonGroup">
+                    <string notr="true">buttonGroup_rcv</string>
+                   </attribute>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_13">
+                  <widget class="QPushButton" name="pB_clearRcv">
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
@@ -137,7 +143,7 @@
               </layout>
              </item>
              <item>
-              <widget class="QTextEdit" name="textEdit_3"/>
+              <widget class="QTextEdit" name="tE_rcvcon"/>
              </item>
             </layout>
            </item>
@@ -270,6 +276,9 @@
                      <property name="checked">
                       <bool>true</bool>
                      </property>
+                     <attribute name="buttonGroup">
+                      <string notr="true">buttonGroup_send</string>
+                     </attribute>
                     </widget>
                    </item>
                    <item>
@@ -295,6 +304,9 @@
                      <property name="checked">
                       <bool>false</bool>
                      </property>
+                     <attribute name="buttonGroup">
+                      <string notr="true">buttonGroup_send</string>
+                     </attribute>
                     </widget>
                    </item>
                    <item>
@@ -555,9 +567,24 @@
     <property name="title">
      <string>帮助</string>
     </property>
+    <addaction name="actionAbout"/>
+    <addaction name="actionAbout_QT"/>
    </widget>
    <addaction name="menuHelp"/>
   </widget>
+  <action name="actionAbout">
+   <property name="text">
+    <string>关于</string>
+   </property>
+   <property name="toolTip">
+    <string>关于本软件</string>
+   </property>
+  </action>
+  <action name="actionAbout_QT">
+   <property name="text">
+    <string>About QT</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections>
@@ -578,9 +605,9 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton_13</sender>
+   <sender>pB_clearRcv</sender>
    <signal>clicked()</signal>
-   <receiver>textEdit_3</receiver>
+   <receiver>tE_rcvcon</receiver>
    <slot>clear()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -594,4 +621,8 @@
    </hints>
   </connection>
  </connections>
+ <buttongroups>
+  <buttongroup name="buttonGroup_rcv"/>
+  <buttongroup name="buttonGroup_send"/>
+ </buttongroups>
 </ui>

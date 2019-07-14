@@ -8,6 +8,7 @@ class MainWindow;
 }
 class QSerialPort;
 class QTimer;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -25,6 +26,8 @@ protected:
     int last_combox_index;
     bool eventFilter(QObject* watched, QEvent* event);
     QTimer* send_timer;
+    QMap<quint64, QByteArray>* rcv_data_map;
+    QString GetCorrectUnicode(const QByteArray& ba);
 private:
     Ui::MainWindow* ui;
 signals:
