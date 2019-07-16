@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 #if (QT_VERSION >= QT_VERSION_CHECK(5,6,0))
     QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
-    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF8"));
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
     QApplication app(argc, argv);
     //加载css
     QFile file(":/ui/css/lightblue.css");

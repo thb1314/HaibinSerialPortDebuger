@@ -15,7 +15,14 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
+    enum SEND_TYPE
+    {
+        Serial_SEND,
+        Serial_RCV,
+    };
+    Q_ENUM(SEND_TYPE)
 protected:
+
     void initSerialPortList(void);
     void initBautrateList(void);
     void initDataBitList(void);
@@ -26,7 +33,7 @@ protected:
     int last_combox_index;
     bool eventFilter(QObject* watched, QEvent* event);
     QTimer* send_timer;
-    QMap<quint64, QByteArray>* rcv_data_map;
+    QMap<quint64, QMap<SEND_TYPE, QByteArray>>* rcv_data_map;
     QString GetCorrectUnicode(const QByteArray& ba);
 private:
     Ui::MainWindow* ui;
@@ -34,6 +41,7 @@ signals:
 
 public slots:
     void slotOnSendSerialContent(void);
+    void slotOnSaveData(void);
 };
 
 #endif // MAINWINDOW_H

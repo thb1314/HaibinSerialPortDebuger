@@ -5,10 +5,11 @@
 #include <QEvent>
 #include <QMouseEvent>
 #include <QTextCodec>
-#include <QMessageBox>
+#include <QFileDialog>
 #include <QTimer>
 #include <QDateTime>
 #include <QScrollBar>
+#include <QFile>
 
 
 #include "MessageBox.h"
@@ -20,7 +21,7 @@ MainWindow::MainWindow(QWidget* parent) :
     serial_port(new QSerialPort(this)), ui(new Ui::MainWindow)
 {
     this->last_combox_index = 0;
-    this->rcv_data_map = new QMap<quint64, QByteArray>();
+    this->rcv_data_map = new QMap<quint64, QMap<SEND_TYPE, QByteArray>>();
     ui->setupUi(this);
     ui->menuHelp->setMouseTracking(true);
 
@@ -31,16 +32,19 @@ MainWindow::MainWindow(QWidget* parent) :
     initCheckBitList();
 
 
-    QObject::connect(this->ui->pB_clearRcv, &QPushButton::clicked, [this]
+    QObject::connect(this->ui->pB_clearLog, &QPushButton::clicked, [this]
     {
         this->rcv_data_map->clear();
     });
     QObject::connect(this->ui->actionAbout, &QAction::triggered, [this]
     {
-        //QMessageBox替换成自己的
-        QMessageBox::about(this, "关于", "本软件由海滨开发且开放源代码，遵循LGPL协议。");
+        MessageBox::about(this, "关于", "本软件由海滨开发且开放源代码，遵循LGPL协议。");
     });
     QObject::connect(this->ui->actionAbout_QT, &QAction::triggered, &qApp->aboutQt);
+
+    QObject::connect(this->ui->pB_saveRevData, SIGNAL(clicked()), this, SLOT(slotOnSaveData()));
+    QObject::connect(this->ui->pB_saveSendData, SIGNAL(clicked()), this, SLOT(slotOnSaveData()));
+    QObject::connect(this->ui->pB_saveAllData, SIGNAL(clicked()), this, SLOT(slotOnSaveData()));
 
     QObject::connect(this->ui->rB_rcvMode_text, &QRadioButton::toggled, [this](bool is_checked)
     {
@@ -49,10 +53,21 @@ MainWindow::MainWindow(QWidget* parent) :
             this->ui->tE_rcvcon->clear();
             foreach(qint64 unix_timestamp, this->rcv_data_map->keys())
             {
-                QString rcvStr("[收] ");
+                QString rcvStr;
+
+                const QMap<SEND_TYPE, QByteArray>& map_data = this->rcv_data_map->value(unix_timestamp);
+                const SEND_TYPE& type = map_data.firstKey();
+                const QByteArray& rcv_data = map_data.value(type);
+                if(type == Serial_RCV)
+                {
+                    rcvStr += "[收] ";
+                }
+                else
+                {
+                    rcvStr += "[发] ";
+                }
                 rcvStr += QDateTime::fromMSecsSinceEpoch(unix_timestamp).toString("yyyy-MM-dd hh:mm:ss zzz");
                 rcvStr += "\r\n";
-                const QByteArray& rcv_data = this->rcv_data_map->value(unix_timestamp);
                 if(is_checked)
                 {
                     rcvStr += this->GetCorrectUnicode(rcv_data);
@@ -72,10 +87,45 @@ MainWindow::MainWindow(QWidget* parent) :
                     }
                 }
 
-                rcvStr += "\r\n";
                 this->ui->tE_rcvcon->append(rcvStr);
             }
         }
+    });
+    QObject::connect(this->serial_port, &QSerialPort::readyRead, [this]
+    {
+        if(!this->is_open_serailport) return;
+        const QByteArray& rcv_data = this->serial_port->readAll();
+        if(rcv_data.length() <= 0) return;
+        quint64 unix_timestamp = QDateTime::currentMSecsSinceEpoch();   //获取当前时间
+        QMap <SEND_TYPE, QByteArray> insert_data;
+        insert_data.insert(Serial_RCV, rcv_data);
+        this->rcv_data_map->insert(unix_timestamp, insert_data);
+        QString rcvStr("[收] ");
+        rcvStr += QDateTime::fromMSecsSinceEpoch(unix_timestamp).toString("yyyy-MM-dd hh:mm:ss zzz");
+        rcvStr += "\r\n";
+
+        if(this->ui->rB_rcvMode_text->isChecked())
+        {
+            rcvStr += this->GetCorrectUnicode(rcv_data);
+        }
+        else if(this->ui->rB_rcvMode_hex->isChecked())
+        {
+            foreach(quint8 data, rcv_data)
+            {
+                if(data < 16)
+                {
+                    rcvStr += "0" + QString::number(data, 16) + " ";
+                }
+                else
+                {
+                    rcvStr += QString::number(data, 16) + " ";
+                }
+            }
+        }
+
+        this->ui->tE_rcvcon->append(rcvStr);
+        QScrollBar* scrollBar = this->ui->tE_rcvcon->verticalScrollBar();
+        scrollBar->setValue(scrollBar->maximum());
     });
     QObject::connect(ui->pB_openSerail, &QPushButton::clicked, [this]
     {
@@ -93,7 +143,7 @@ MainWindow::MainWindow(QWidget* parent) :
             {
                 this->ui->cB_serailport->setEnabled(true);
             }
-            QObject::disconnect(this->serial_port, SIGNAL(readyRead()));
+
             this->is_open_serailport = false;
         }
         else
@@ -169,39 +219,7 @@ MainWindow::MainWindow(QWidget* parent) :
                 }
                 this->is_open_serailport = true;
 
-                QObject::connect(this->serial_port, &QSerialPort::readyRead, [this]
-                {
-                    quint64 unix_timestamp = QDateTime::currentMSecsSinceEpoch();   //获取当前时间
-                    this->rcv_data_map->insert(unix_timestamp, this->serial_port->readAll());
-                    QString rcvStr("[收] ");
-                    rcvStr += QDateTime::fromMSecsSinceEpoch(unix_timestamp).toString("yyyy-MM-dd hh:mm:ss zzz");
-                    rcvStr += "\r\n";
-                    const QByteArray& rcv_data = this->rcv_data_map->value(unix_timestamp);
-                    if(this->ui->rB_rcvMode_text->isChecked())
-                    {
-                        rcvStr += this->GetCorrectUnicode(rcv_data);
-                    }
-                    else if(this->ui->rB_rcvMode_hex->isChecked())
-                    {
-//                        int len = rcv_data.length();
-                        foreach(quint8 data, rcv_data)
-                        {
-                            if(data < 16)
-                            {
-                                rcvStr += "0" + QString::number(data, 16) + " ";
-                            }
-                            else
-                            {
-                                rcvStr += QString::number(data, 16) + " ";
-                            }
-                        }
-                    }
 
-                    rcvStr += "\r\n";
-                    this->ui->tE_rcvcon->append(rcvStr);
-                    QScrollBar* scrollBar = this->ui->tE_rcvcon->verticalScrollBar();
-                    scrollBar->setValue(scrollBar->maximum());
-                });
             }
             else
             {
@@ -262,6 +280,9 @@ MainWindow::~MainWindow()
     delete ui;
     delete rcv_data_map;
 }
+
+
+
 QString MainWindow::GetCorrectUnicode(const QByteArray& ba)
 {
     QTextCodec::ConverterState state;
@@ -438,14 +459,15 @@ void MainWindow::slotOnSendSerialContent()
         QString contentString = this->ui->tE_sendcon->toPlainText();
         if(!contentString.isEmpty())
         {
+            QByteArray send_arr;
+
             if(this->ui->rB_sendMode_text->isChecked())
             {
                 QTextCodec* gbk = QTextCodec::codecForName("gbk");
-                this->serial_port->write(gbk->fromUnicode(contentString.toLocal8Bit().data()));
+                send_arr = gbk->fromUnicode(contentString.toLocal8Bit().data());
             }
             else if(this->ui->rB_sendMode_hex->isChecked())
             {
-                QByteArray send_arr;
                 int content_length = contentString.length();
                 char hexchar, hexchar_next;
                 for(int i = 0; i < content_length; i++)
@@ -529,15 +551,103 @@ void MainWindow::slotOnSendSerialContent()
                     }
                 }
                 //end for
-                if(send_arr.length() > 0)
-                    this->serial_port->write(send_arr);
             }
             //end else if(this->ui->rB_sendMode_hex->isChecked())
+            if(send_arr.length() > 0)
+            {
+                QMap<SEND_TYPE, QByteArray> insert_data;
+                const quint64& unix_timestamp = QDateTime::currentMSecsSinceEpoch();   //获取当前时间
+                insert_data.insert(Serial_SEND, send_arr);
+
+                QString sendStr("[发] ");
+                sendStr += QDateTime::fromMSecsSinceEpoch(unix_timestamp).toString("yyyy-MM-dd hh:mm:ss zzz");
+                sendStr += "\r\n";
+
+                if(this->ui->rB_rcvMode_text->isChecked())
+                {
+                    if(this->ui->rB_sendMode_hex)
+                    {
+                        sendStr += send_arr;
+                    }
+                    else
+                    {
+                        sendStr += contentString;
+                    }
+
+                }
+                else if(this->ui->rB_rcvMode_hex->isChecked())
+                {
+                    foreach(quint8 data, send_arr)
+                    {
+                        if(data < 16)
+                        {
+                            sendStr += "0" + QString::number(data, 16) + " ";
+                        }
+                        else
+                        {
+                            sendStr += QString::number(data, 16) + " ";
+                        }
+                    }
+                }
+                this->ui->tE_rcvcon->append(sendStr);
+                this->rcv_data_map->insert(unix_timestamp, insert_data);
+                this->serial_port->write(send_arr);
+                QScrollBar* scrollBar = this->ui->tE_rcvcon->verticalScrollBar();
+                scrollBar->setValue(scrollBar->maximum());
+            }
         }
         //end !contentString.isEmpty()
     }
     // end this->is_open_serial
 
 
+}
+
+void MainWindow::slotOnSaveData()
+{
+
+    QString fileName = QFileDialog::getSaveFileName(this, "保存文件");
+    if(!fileName.isEmpty())
+    {
+        QFile file(fileName);
+        if(!file.open(QIODevice::WriteOnly))
+        {
+            qDebug() << "open fail!";
+            return;
+        }
+        QDataStream w_stream(&file);
+        QByteArray w_data;
+        QMap<quint64, QMap<SEND_TYPE, QByteArray>>::Iterator iter = this->rcv_data_map->begin();
+        QObject* sender = this->sender();
+        while(iter != this->rcv_data_map->end())
+        {
+            SEND_TYPE type = iter.value().firstKey();
+
+            if(sender == this->ui->pB_saveRevData)
+            {
+                if(type == Serial_RCV)
+                {
+                    w_data.append(iter.value().value(type));
+                }
+            }
+            else if(sender == this->ui->pB_saveSendData)
+            {
+                if(type == Serial_SEND)
+                {
+                    w_data.append(iter.value().value(type));
+                }
+
+            }
+            else if(sender == this->ui->pB_saveAllData)
+            {
+                w_data.append(iter.value().value(type));
+            }
+
+            iter++;
+        }
+        w_stream.writeRawData(w_data.data(), w_data.length());
+        file.close();
+        MessageBox::info(this, "成功", "保存文件成功");
+    }
 }
 

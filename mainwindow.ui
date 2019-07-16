@@ -100,7 +100,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pB_clearRcv">
+                  <widget class="QPushButton" name="pB_clearLog">
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
@@ -108,12 +108,12 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>清空接收区</string>
+                    <string>清空消息记录</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_14">
+                  <widget class="QPushButton" name="pB_saveRevData">
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
@@ -122,6 +122,32 @@
                    </property>
                    <property name="text">
                     <string>保存接收数据</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pB_saveSendData">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>22</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>保存发送数据</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pB_saveAllData">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>22</height>
+                    </size>
+                   </property>
+                   <property name="text">
+                    <string>保存全部数据</string>
                    </property>
                   </widget>
                  </item>
@@ -319,19 +345,6 @@
                      </property>
                      <property name="text">
                       <string>清空发送区</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="pushButton_3">
-                     <property name="maximumSize">
-                      <size>
-                       <width>16777215</width>
-                       <height>22</height>
-                      </size>
-                     </property>
-                     <property name="text">
-                      <string>保存发送数据</string>
                      </property>
                     </widget>
                    </item>
@@ -605,7 +618,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pB_clearRcv</sender>
+   <sender>pB_clearLog</sender>
    <signal>clicked()</signal>
    <receiver>tE_rcvcon</receiver>
    <slot>clear()</slot>

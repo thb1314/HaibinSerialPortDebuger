@@ -6,6 +6,9 @@
 #include <QHBoxLayout>
 #include <QDebug>
 #include <QFrame>
+#include <QEvent>
+#include <QMouseEvent>
+#include <QApplication>
 
 #include "config.h"
 #include "MessageBox.h"
@@ -19,6 +22,8 @@ MessageBox::MessageBox(QWidget* parent, Qt::WindowFlags f) : QDialog(parent, f)
     this->confirm_button = NULL;
     this->cancel_button = NULL;
     this->centralTitle = NULL;
+    this->record_mousePressed = false;
+    this->record_mousePoint = QPoint(0, 0);
     this->setWindowFlags(Qt::FramelessWindowHint | Qt::Dialog);
     this->initWidget();
     this->setObjectName(QString::fromUtf8("MessageBox"));
@@ -29,6 +34,7 @@ MessageBox::MessageBox(QWidget* parent, Qt::WindowFlags f) : QDialog(parent, f)
 int MessageBox::warning(QWidget* parent, const QString& title, const QString& text)
 {
 //    MessageBox tmp(parent);
+    QApplication::beep();
     MessageBox* messageBox_ptr = new MessageBox(parent);
     messageBox_ptr->setWindowTitle(title);
     messageBox_ptr->setInfoText(text);
@@ -38,6 +44,95 @@ int MessageBox::warning(QWidget* parent, const QString& title, const QString& te
     int ret = messageBox_ptr->exec();
     messageBox_ptr->deleteLater();
     return ret;
+}
+
+int MessageBox::info(QWidget* parent, const QString& title, const QString& text)
+{
+    MessageBox* messageBox_ptr = new MessageBox(parent);
+    messageBox_ptr->setWindowTitle(title);
+    messageBox_ptr->setInfoText(text);
+    messageBox_ptr->setModal(true);
+    messageBox_ptr->setInfoIcoType(MessageBox::Information);
+    messageBox_ptr->cancel_button->setHidden(true);
+    int ret = messageBox_ptr->exec();
+    messageBox_ptr->deleteLater();
+    return ret;
+}
+
+int MessageBox::about(QWidget* parent, const QString& title, const QString& text)
+{
+    MessageBox* messageBox_ptr = new MessageBox(parent);
+    messageBox_ptr->setWindowTitle(title);
+    messageBox_ptr->setInfoText(text);
+    messageBox_ptr->setModal(true);
+    messageBox_ptr->setInfoIcoType(MessageBox::NoIcon);
+    messageBox_ptr->cancel_button->setHidden(true);
+    int ret = messageBox_ptr->exec();
+    messageBox_ptr->deleteLater();
+    return ret;
+}
+
+bool MessageBox::eventFilter(QObject* obj, QEvent* ev)
+{
+    if(obj == this->centralTitle)
+    {
+        QMouseEvent* event = static_cast<QMouseEvent*>(ev);
+        QEvent::Type type = ev->type();
+        switch(type)
+        {
+            case QEvent::MouseButtonPress:
+                if(event->button() == Qt::LeftButton)
+                {
+                    //qDebug() << "Qt::LeftButton Pressed";
+                    //qDebug() << event->globalPos();
+                    //qDebug() << this->pos();
+                    record_mousePressed = true;
+                    record_mousePoint = event->globalPos() - this->pos();
+                }
+                event->ignore();
+                return true;
+                break;
+            case QEvent::MouseButtonRelease:
+                if(event->button() == Qt::LeftButton)
+                {
+                    //qDebug() << "Qt::LeftButton Released";
+                    //qDebug() << event->globalPos();
+                    //qDebug() << this->pos();
+                    //qDebug() << centralTitle->geometry().topLeft();
+                    record_mousePressed = false;
+                }
+                event->ignore();
+                return true;
+                break;
+            case QEvent::MouseMove:
+
+                if(this->record_mousePressed)
+                {
+                    if(this->isMaximized())
+                    {
+                        //this->showNormal();
+                        //qDebug() << "record_mousePoint" << record_mousePoint;
+                        //record_mousePressed = false;
+                    }
+                    else
+                    {
+                        //qDebug() << "event->globalPos()" << event->globalPos();
+                        //qDebug() << "record_mousePoint" << record_mousePoint;
+                        this->move(event->globalPos() - record_mousePoint);
+                    }
+                    event->ignore();
+                    return true;
+
+                }
+
+                break;
+            default:
+                break;
+        }
+
+    }
+    return QDialog::eventFilter(obj, ev);
+
 }
 
 void MessageBox::initWidget()
@@ -173,7 +268,7 @@ void MessageBox::initWidget()
     QObject::connect(closeBtn, SIGNAL(clicked()), this, SLOT(close()));
 
 
-//    centralTitle->installEventFilter(this);
+    centralTitle->installEventFilter(this);
 
 
     //设置文字和图标

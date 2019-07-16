@@ -3,7 +3,7 @@
 
 #include <QMessageBox>
 #include <QDialog>
-
+#include <QPoint>
 class QPushButton;
 class QLabel;
 
@@ -29,10 +29,16 @@ public:
     QPushButton* confirm_button;
     QPushButton* cancel_button;
     static int warning(QWidget* parent, const QString& title, const QString& text);
+    static int info(QWidget* parent, const QString& title, const QString& text);
+    static int about(QWidget* parent, const QString& title, const QString& text);
+    bool eventFilter(QObject*, QEvent*);
+
 private:
     QLabel* infotext;
     QLabel* labico;
     QLabel* centralTitle;
+    bool record_mousePressed;
+    QPoint record_mousePoint;
 signals:
 
 public slots:

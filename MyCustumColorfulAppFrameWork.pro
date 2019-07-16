@@ -23,3 +23,9 @@ RESOURCES += \
 
 FORMS += \
     mainwindow.ui
+
+CONFIG(debug,debug|release){
+
+}else{
+    DEFINES += QT_NO_DEBUG_OUTPUT
+}
