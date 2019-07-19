@@ -1,4 +1,4 @@
-﻿#include <QDebug>
+#include <QDebug>
 #include <QSerialPortInfo>
 #include <QSerialPort>
 #include <QMap>
@@ -307,7 +307,7 @@ MainWindow::MainWindow(QWidget* parent) :
 
                 if(this->ui->rB_rcvMode_text->isChecked())
                 {
-                    if(this->ui->rB_sendMode_hex)
+                    if(this->ui->rB_sendMode_hex->isChecked())
                     {
                         sendStr += send_buffer;
                     }
@@ -644,7 +644,7 @@ void MainWindow::slotOnSendSerialContent()
 
                 if(this->ui->rB_rcvMode_text->isChecked())
                 {
-                    if(this->ui->rB_sendMode_hex)
+                    if(this->ui->rB_sendMode_hex->isChecked())
                     {
                         sendStr += send_arr;
                     }
