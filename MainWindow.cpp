@@ -31,7 +31,6 @@ MainWindow::MainWindow(QWidget* parent) :
     initStopBitList();
     initCheckBitList();
 
-
     QObject::connect(this->ui->pB_clearLog, &QPushButton::clicked, [this]
     {
         this->rcv_data_map->clear();
@@ -124,9 +123,15 @@ MainWindow::MainWindow(QWidget* parent) :
         }
 
         this->ui->tE_rcvcon->append(rcvStr);
+
+        this->rcv_cnt += rcv_data.length();
+        this->ui->lE_rcv_cnt->setText(QString::number(this->rcv_cnt));
+
         QScrollBar* scrollBar = this->ui->tE_rcvcon->verticalScrollBar();
         scrollBar->setValue(scrollBar->maximum());
     });
+
+
     QObject::connect(ui->pB_openSerail, &QPushButton::clicked, [this]
     {
         if(this->is_open_serailport)
@@ -186,7 +191,7 @@ MainWindow::MainWindow(QWidget* parent) :
             {
 
                 qDebug() << "设置停止位失败，失败原因：" << serial_port->errorString();
-                QMessageBox::warning(this, "错误", QString("设置停止位失败，失败原因：") + serial_port->errorString());
+                MessageBox::warning(this, "错误", QString("设置停止位失败，失败原因：") + serial_port->errorString());
                 return;
             }
             // 获取校验位
@@ -266,6 +271,80 @@ MainWindow::MainWindow(QWidget* parent) :
             this->ui->pB_sendfile->setDisabled(false);
             this->ui->pB_autoSend->setText("自动发送");
             this->send_timer->stop();
+        }
+    });
+
+    QObject::connect(this->ui->pB_clear_count, &QPushButton::clicked, [this]()
+    {
+        this->send_cnt = 0;
+        this->ui->lE_send_cnt->setText(QString::number(this->send_cnt));
+        this->rcv_cnt = 0;
+        this->ui->lE_rcv_cnt->setText(QString::number(this->rcv_cnt));
+    });
+    this->ui->pB_clear_count->click();
+    QObject::connect(this->ui->pB_sendfile, &QPushButton::clicked, [this]
+    {
+        if(!this->is_open_serailport) return;
+        QString fileName = QFileDialog::getOpenFileName(this, "打开文件");
+        if(!fileName.isEmpty())
+        {
+            QFile file(fileName);
+            if(!file.open(QIODevice::ReadOnly))
+            {
+                qDebug() << "open fail!";
+                return;
+            }
+            const QByteArray& send_buffer = file.readAll();
+            if(send_buffer.length() > 0)
+            {
+                QMap<SEND_TYPE, QByteArray> insert_data;
+                const quint64& unix_timestamp = QDateTime::currentMSecsSinceEpoch();   //获取当前时间
+                insert_data.insert(Serial_SEND, send_buffer);
+
+                QString sendStr("[发] ");
+                sendStr += QDateTime::fromMSecsSinceEpoch(unix_timestamp).toString("yyyy-MM-dd hh:mm:ss zzz");
+                sendStr += "\r\n";
+
+                if(this->ui->rB_rcvMode_text->isChecked())
+                {
+                    if(this->ui->rB_sendMode_hex)
+                    {
+                        sendStr += send_buffer;
+                    }
+                    else
+                    {
+                        sendStr += QString(send_buffer);
+                    }
+
+                }
+                else if(this->ui->rB_rcvMode_hex->isChecked())
+                {
+                    foreach(quint8 data, send_buffer)
+                    {
+                        if(data < 16)
+                        {
+                            sendStr += "0" + QString::number(data, 16) + " ";
+                        }
+                        else
+                        {
+                            sendStr += QString::number(data, 16) + " ";
+                        }
+                    }
+                }
+                this->ui->tE_rcvcon->append(sendStr);
+                this->rcv_data_map->insert(unix_timestamp, insert_data);
+                this->serial_port->write(send_buffer);
+
+                this->send_cnt += send_buffer.length();
+                this->ui->lE_send_cnt->setText(QString::number(this->send_cnt));
+
+                QScrollBar* scrollBar = this->ui->tE_rcvcon->verticalScrollBar();
+                scrollBar->setValue(scrollBar->maximum());
+                MessageBox::info(this, "成功", "发送文件成功");
+            }
+
+            file.close();
+
         }
     });
 }
@@ -592,6 +671,10 @@ void MainWindow::slotOnSendSerialContent()
                 this->ui->tE_rcvcon->append(sendStr);
                 this->rcv_data_map->insert(unix_timestamp, insert_data);
                 this->serial_port->write(send_arr);
+
+                this->send_cnt += send_arr.length();
+                this->ui->lE_send_cnt->setText(QString::number(this->send_cnt));
+
                 QScrollBar* scrollBar = this->ui->tE_rcvcon->verticalScrollBar();
                 scrollBar->setValue(scrollBar->maximum());
             }

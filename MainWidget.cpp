@@ -115,7 +115,7 @@ void MainWidget::initWidget(void)
     sizePolicy.setHeightForWidth(centralTitle->sizePolicy().hasHeightForWidth());
     centralTitle->setSizePolicy(sizePolicy);
     centralTitle->setAlignment(Qt::AlignLeading | Qt::AlignCenter);
-    centralTitle->setText("标题");
+    centralTitle->setText("海滨串口调试助手");
     centralTitle->setMouseTracking(true);
     hLayoutTitle->addWidget(centralTitle);
 

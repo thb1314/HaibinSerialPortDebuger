@@ -500,7 +500,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_2">
+         <widget class="QLineEdit" name="lE_send_cnt">
           <property name="maximumSize">
            <size>
             <width>60</width>
@@ -520,7 +520,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_3">
+         <widget class="QLineEdit" name="lE_rcv_cnt">
           <property name="maximumSize">
            <size>
             <width>60</width>
@@ -533,7 +533,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pB_rm_count">
+         <widget class="QPushButton" name="pB_clear_count">
           <property name="maximumSize">
            <size>
             <width>60</width>
@@ -635,7 +635,7 @@
   </connection>
  </connections>
  <buttongroups>
-  <buttongroup name="buttonGroup_rcv"/>
   <buttongroup name="buttonGroup_send"/>
+  <buttongroup name="buttonGroup_rcv"/>
  </buttongroups>
 </ui>

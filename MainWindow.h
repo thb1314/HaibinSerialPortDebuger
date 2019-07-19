@@ -22,7 +22,8 @@ public:
     };
     Q_ENUM(SEND_TYPE)
 protected:
-
+    quint64 send_cnt;
+    quint64 rcv_cnt;
     void initSerialPortList(void);
     void initBautrateList(void);
     void initDataBitList(void);

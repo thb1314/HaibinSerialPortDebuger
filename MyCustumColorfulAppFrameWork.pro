@@ -24,6 +24,8 @@ RESOURCES += \
 FORMS += \
     mainwindow.ui
 
+RC_ICONS = serial.ico
+
 CONFIG(debug,debug|release){
 
 }else{
